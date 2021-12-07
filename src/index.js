@@ -36,7 +36,18 @@ const run = async () => {
   const container = d3.select('.line-container')
   container.datum({data: [...lineData[0], ...lineData[1]]}).call(lineChart);
   
-  return
+  // make it responsive: adapt to width changes
+  const redrawChart = () => {
+    const newContainerWidth = container.node() 
+      ? container.node().getBoundingClientRect().width
+      : false
+
+    lineChart.width(newContainerWidth)
+    container.call(lineChart)
+  } 
+
+  window.addEventListener('resize', () => window.requestAnimationFrame(redrawChart))
+
 }
 
 run()
