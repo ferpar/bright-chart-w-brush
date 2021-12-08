@@ -70,7 +70,7 @@ const run = async () => {
   const filterData = (brushStart, brushEnd) => {
     let lineDataCopy = {data: [...lineData[0], ...lineData[1]]};
     
-    return lineDataCopy.data.filter(item => isInRange(brushStart, brushEnd, item))
+    return { data: lineDataCopy.data.filter(item => isInRange(brushStart, brushEnd, item))}
 
   }
 
