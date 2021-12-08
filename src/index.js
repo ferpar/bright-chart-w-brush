@@ -19,15 +19,18 @@ const run = async () => {
       })
     ) 
   )
-  console.log(lineData)
 
   // create container
   const domContainer = newContainer('line-container')
   await document.body.appendChild(domContainer)
   const containerWidth = domContainer.getBoundingClientRect().width;
 
+  const domBrushContainer = newContainer('brush-container')
+  await document.body.appendChild(domBrushContainer)
+
   const domLegendContainer = newContainer('legend-container')
   await document.body.appendChild(domLegendContainer)
+
 
   // insert chart with tooltip and legend
   const lineChart = britecharts.line()
@@ -48,6 +51,44 @@ const run = async () => {
   // tooltip
   const tooltipContainer = d3.select('.line-container .metadata-group .hover-marker')
   tooltipContainer.call(chartTooltip)
+
+  // brush
+  const brushContainer = d3.select('.brush-container') 
+    // for the brush we sum up all values into a single line
+  const brushData =  rawData.dataByDate.map( elem => (
+      {
+        date: elem.date,
+        value: elem.topics.reduce( (ac,cu) => ac + cu.value, 0)
+      }
+    )
+  )
+
+  const isInRange = (startDate, endDate, {date}) => { 
+    return new Date(date) >= startDate && new Date(date) <= endDate;
+  }
+
+  const filterData = (brushStart, brushEnd) => {
+    let lineDataCopy = {data: [...lineData[0], ...lineData[1]]};
+    
+    return lineDataCopy.data.filter(item => isInRange(brushStart, brushEnd, item))
+
+  }
+
+  const chartBrush = britecharts.brush()
+  chartBrush
+    .width(containerWidth)
+    .height(100)
+    .xAxisFormat(chartBrush.axisTimeCombinations.DAY_MONTH)
+    .margin({top:0, bottom: 40, left: 50, right: 30})
+    .on('customBrushEnd', ([brushStart, brushEnd]) => {
+      if (brushStart && brushEnd) {
+        let filteredLineData = filterData(brushStart, brushEnd)
+        console.log(filteredLineData)
+        container.datum(filteredLineData).call(lineChart)
+      }
+    })
+
+  brushContainer.datum(brushData).call(chartBrush)
 
   // legend
   const legendContainer = d3.select('.legend-container')
@@ -70,8 +111,8 @@ const run = async () => {
     .height(60)
     .isHorizontal(true)
   legendContainer.datum(legendData).call(chartLegend)
-  
-  // make the chart responsive: adapt to width changes
+
+  // make the chart and legend responsive: adapt to width changes
   const redrawChart = () => {
     const newContainerWidth = container.node() 
       ? container.node().getBoundingClientRect().width
@@ -79,6 +120,8 @@ const run = async () => {
 
     lineChart.width(newContainerWidth)
     container.call(lineChart)
+    chartBrush.width(newContainerWidth)
+    brushContainer.call(chartBrush)
     chartLegend.width(newContainerWidth)
     legendContainer.call(chartLegend)
   } 
