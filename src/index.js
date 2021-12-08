@@ -19,6 +19,11 @@ const run = async () => {
       })
     ) 
   )
+  const selectedLineData = {data: [
+    ...lineData[0],
+    ...lineData[1],
+    ...lineData[2]
+  ]}
 
   // create container
   const domContainer = newContainer('line-container')
@@ -46,7 +51,7 @@ const run = async () => {
     .on('customMouseOut', chartTooltip.hide)
 
   const container = d3.select('.line-container')
-  container.datum({data: [...lineData[0], ...lineData[1]]}).call(lineChart);
+  container.datum(selectedLineData).call(lineChart);
   
   // tooltip
   const tooltipContainer = d3.select('.line-container .metadata-group .hover-marker')
@@ -68,7 +73,7 @@ const run = async () => {
   }
 
   const filterData = (brushStart, brushEnd) => {
-    let lineDataCopy = {data: [...lineData[0], ...lineData[1]]};
+    let lineDataCopy = JSON.parse(JSON.stringify(selectedLineData));
     
     return { data: lineDataCopy.data.filter(item => isInRange(brushStart, brushEnd, item))}
 
@@ -92,7 +97,7 @@ const run = async () => {
 
   // legend
   const legendContainer = d3.select('.legend-container')
-  const legendData = [...lineData[0], ...lineData[1]].reduce(
+  const legendData = selectedLineData.data.reduce(
     (ac, item) => {
       let found = ac.find(elem => elem.id === item.name)
       if (found) { return ac }
